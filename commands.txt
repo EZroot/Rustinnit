@@ -1,0 +1,1 @@
+buildall command will execute the ./build_all.sh

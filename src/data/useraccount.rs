@@ -3,7 +3,9 @@ use std::fs::{File};
 use std::io::{Write, Read};
 use std::path::Path;
 
-use super::cryptoinnit;
+use crate::utils::filesinnit::load_data_from_file;
+use crate::utils::{cryptoinnit, filesinnit};
+
 
 #[derive(Serialize, Deserialize)]
 pub struct UserAccount {
@@ -45,44 +47,14 @@ impl UserAccount {
         self.save_account(path_to_save).unwrap();
     }
 
-    pub fn to_json(&self) -> String {
-        let json_string = serde_json::to_string(self).expect("Failed to convert self to json string");
-        json_string
-    }
-
     pub fn save_account(&self, path: &str) -> std::io::Result<()> {
-        let mut file = File::create(path)
-        .expect("Unable to create file");
+       filesinnit::save_data_to_file(self,path).unwrap();
 
-        let json_string = serde_json::to_string(self)
-        .expect("Failed to serialize useraccount");
-        
-        //Reference to bytes
-        let json_bytes = json_string.as_bytes();
-
-        //Write to the file
-        file.write_all(json_bytes)
-        .expect("Unable to write useraccount to file");
         Ok(())
     }
 
     pub fn load_account(path:&str) -> UserAccount {
-
-        let mut json_string = String::new();
-        let mut user_account : UserAccount = UserAccount::new(String::new(), String::new(),String::new(),String::new());
-
-        let file_path = Path::new(path);
-        if file_path.exists()
-        {
-            let mut file = File::open(path)
-            .expect("Failed to load account");
-            
-            file.read_to_string(&mut json_string)
-            .expect("Failed to read json string");
-
-            user_account = serde_json::from_str(&json_string)
-            .expect("Failed to serialize useraccount");
-        }
+        let user_account : UserAccount = load_data_from_file::<UserAccount>(path).unwrap();
         user_account
     }
 

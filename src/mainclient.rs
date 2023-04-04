@@ -1,58 +1,42 @@
 mod data {
     pub mod cryptoinnit;
+    pub mod networkinnit;
     pub mod useraccount;
 }
 
-use data::useraccount::UserAccount;
+use rand::{rngs::OsRng, Rng};
 use serde::{Deserialize, Serialize};
 use std::fs::{File, OpenOptions};
-use std::io::{self, BufReader, BufWriter};
-use rand::{rngs::OsRng, Rng};
+use std::io::{self, BufReader, BufWriter, Write};
 
-use crate::data::cryptoinnit;
+use crate::data::{cryptoinnit, networkinnit, useraccount::UserAccount};
 
 const FILE_PATH_CLIENTSTATE: &str = "clientstate.json";
 const FILE_PATH_USERACCOUNT: &str = "useraccount.json";
 
 fn main() {
-    let username = "Willis";
-    let password = "NerdFace";
-    let pass_hash = cryptoinnit::hash_string(password);
-    let pass_user = username.to_owned() + password;
-    let pass_user_hash = cryptoinnit::hash_string(&pass_user);
+    let mut user_account = UserAccount::load_account(FILE_PATH_USERACCOUNT);
+    loop {
+        println!("1) New User");
+        println!("2) Load User");
+        println!("3) Save User");
+        println!("4) Quit");
+        print!("{0}@{1}>:",user_account.username, networkinnit::get_public_ip().unwrap());
 
-    let new_user = UserAccount::new(username.to_owned(), password.to_owned(), pass_hash, pass_user_hash);
+        std::io::stdout().flush().expect("Failed to flush console!");
 
-    // print!(
-    //     "User {0} {1} {2} {3}",
-    //     new_user.username, new_user.password, new_user.passsha, new_user.passusersha
-    // );
+        let mut choice_input = String::new();
+     
+        std::io::stdin()
+            .read_line(&mut choice_input)
+            .expect("Failed to read line for choice");
 
-    UserAccount::save_account(&new_user, FILE_PATH_USERACCOUNT).expect("Failed to save account");
-
-    let loaded_user = UserAccount::load_account(FILE_PATH_USERACCOUNT);
-
-    // print!(
-    //     "We loaded {0} {1} {2} {3} ",
-    //     loaded_user.username, loaded_user.password, loaded_user.passsha, loaded_user.passusersha
-    // );
-
-    print!("---------------------------------------------------------------------------------");
-    print!("Ok now lets encrypt this shit");
-    print!("---------------------------------------------------------------------------------");
-    let information = loaded_user.username + &loaded_user.password;
-    let mut rand = OsRng;
-    let mut key = b"th231iss5551212222houldbe32chars";
-    //rand.fill(&mut key);
-
-    print!("KeyLen {0}", key.len());
-    let information_encrypted = cryptoinnit::encrypt_string(&key, &information).unwrap();
-
-    //let key_to_string = String::from_utf8(key.to_vec()).expect("Couldn't convert the u8 key to string");
-    print!("Encrypting Key: {0} \n[Encrypting Text]\n {1} \n[Encrypted Text]\n {2}", 
-    "foo",
-    &information,
-    &information_encrypted);
-    print!("---------------------------------------------------------------------------------");
-
+        match choice_input.trim() {
+            "1" => user_account.setup_user(FILE_PATH_USERACCOUNT),
+            "2" => user_account = UserAccount::load_account(FILE_PATH_USERACCOUNT),
+            "3" => user_account.save_account(FILE_PATH_USERACCOUNT).unwrap(),
+            "4" => break,
+            _ => user_account.setup_user(FILE_PATH_USERACCOUNT),
+        }
+    }
 }

@@ -21,3 +21,7 @@ Rust      \ /\  \         \ \___\         \
 Trust         \  \ / ______________________  /
                \  / ______________________  /
                 \/_________________________/
+
+
+Requires OpenSSL (libssl-dev) on ubuntu machine
+Also needs pkg-config installed
